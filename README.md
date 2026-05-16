@@ -1,8 +1,35 @@
 # 1337-RAG
 
-A RAG system answering the 1337 school about questions, with both an interactive CLI and also a TUI for easier use.
+A RAG system that answers questions about 1337 School, with both a clickable TUI and a classic CLI.
 
-## Run
+## Quick setup
+
+1. Create and activate a virtual environment:
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+2. Install the Python dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Add your Pinecone API key in a `.env` file:
+
+```bash
+PINECONE_API_KEY=your_api_key_here
+```
+
+4. Install Ollama and pull the Mistral model:
+
+```bash
+ollama pull mistral
+```
+
+## Usage
 
 ```bash
 python main.py
