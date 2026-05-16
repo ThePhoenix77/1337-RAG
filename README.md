@@ -34,3 +34,6 @@ Useful commands inside the chat:
 - /ingest
 - /reset
 - /exit
+
+## N.B
+If you're interested about RAG systems and how they work under the hood, check my latest article [RAG - Complete Practical Guide](https://tahaboussaden.me/blog/rag-complete-practical-guide).
