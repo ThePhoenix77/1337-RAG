@@ -12,10 +12,12 @@ from rich.table import Table
 
 try:
     from .ingest import ingest_document
-    from .rag import DEFAULT_MODEL, answer_query, retrieve_chunks, stream_answer_query
+    from .rag import DEFAULT_MODEL, answer_query, ensure_index_current, retrieve_chunks, stream_answer_query
+    from .tui import run_tui
 except ImportError:  # pragma: no cover - fallback for direct script execution
     from ingest import ingest_document
-    from rag import DEFAULT_MODEL, answer_query, retrieve_chunks, stream_answer_query
+    from rag import DEFAULT_MODEL, answer_query, ensure_index_current, retrieve_chunks, stream_answer_query
+    from tui import run_tui
 
 
 console = Console()
@@ -138,26 +140,40 @@ def chat_loop(state: ChatState) -> None:
             continue
 
         console.print("[bold green]assistant[/bold green]")
+        reindexed = ensure_index_current()
+        if reindexed:
+            console.print("[yellow]notes.txt changed - re-indexed[/yellow]")
+
         stream, chunks = stream_answer_query(
             user_input,
             model=state.model,
             top_k=state.top_k,
+            check_updates=False,
         )
 
         console.print(Panel.fit(f"[dim]{len(chunks)} chunks retrieved[/dim]", border_style="green"))
-        with console.status("Thinking...", spinner="dots"):
-            response_parts = []
-            for token in stream:
-                response_parts.append(token)
-                console.print(token, end="")
+        response_parts = []
+        for token in stream:
+            if not token:
+                continue
+            response_parts.append(token)
+            console.out(token, end="")
 
-        console.print()
+        if response_parts:
+            console.print()
+        else:
+            console.print("[yellow]No response content received from model.[/yellow]")
+
         response_text = "".join(response_parts).strip()
         state.history.append((user_input, response_text))
 
 
 def one_shot(question: str, model: str, top_k: int) -> None:
     print_banner()
+    reindexed = ensure_index_current()
+    if reindexed:
+        console.print("[yellow]notes.txt changed - re-indexed[/yellow]")
+
     response, chunks = answer_query(question, model=model, top_k=top_k)
     console.print(Panel.fit(f"[dim]{len(chunks)} chunks retrieved[/dim]", border_style="green"))
     console.print(response)
@@ -168,6 +184,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("question", nargs="?", help="Ask a single question and exit")
     parser.add_argument("--model", default=DEFAULT_MODEL, help="Ollama model name")
     parser.add_argument("--top-k", type=int, default=3, help="Number of chunks to retrieve")
+    parser.add_argument("--classic", action="store_true", help="Use the old non-clickable CLI")
     return parser
 
 
@@ -178,5 +195,8 @@ def main(argv: Iterable[str] | None = None) -> None:
     if args.question:
         one_shot(args.question, model=args.model, top_k=args.top_k)
         return
+    if args.classic:
+        chat_loop(ChatState(model=args.model, top_k=args.top_k))
+        return
 
-    chat_loop(ChatState(model=args.model, top_k=args.top_k))
+    run_tui(model=args.model, top_k=args.top_k)

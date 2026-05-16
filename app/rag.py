@@ -12,15 +12,35 @@ except ImportError:  # pragma: no cover - fallback for direct script execution
     from embeddings import generate_embedding
     from pinecone_service import get_index
 
+try:
+    from .file_tracker import has_file_changed, update_cache
+    from .ingest import ingest_document
+except ImportError:  # pragma: no cover - fallback for direct script execution
+    from file_tracker import has_file_changed, update_cache
+    from ingest import ingest_document
+
 
 DEFAULT_MODEL = "mistral"
 DEFAULT_TOP_K = 3
+DEFAULT_DOC_PATH = "data/notes.txt"
 
 
 @dataclass(slots=True)
 class RetrievedChunk:
     score: float | None
     text: str
+
+
+def ensure_index_current(doc_path: str = DEFAULT_DOC_PATH) -> bool:
+    """
+    Check if the document has changed and re-index if needed.
+    Returns True if re-indexing occurred, False otherwise.
+    """
+    if has_file_changed(doc_path):
+        ingest_document(doc_path)
+        update_cache(doc_path)
+        return True
+    return False
 
 
 def retrieve_chunks(query: str, top_k: int = DEFAULT_TOP_K) -> list[RetrievedChunk]:
@@ -80,7 +100,11 @@ def answer_query(
     query: str,
     model: str = DEFAULT_MODEL,
     top_k: int = DEFAULT_TOP_K,
+    check_updates: bool = True,
+    doc_path: str = DEFAULT_DOC_PATH,
 ) -> tuple[str, list[RetrievedChunk]]:
+    if check_updates:
+        ensure_index_current(doc_path)
     chunks = retrieve_chunks(query, top_k=top_k)
     context = build_context(chunks)
     prompt = build_prompt(query, context)
@@ -98,7 +122,11 @@ def stream_answer_query(
     query: str,
     model: str = DEFAULT_MODEL,
     top_k: int = DEFAULT_TOP_K,
+    check_updates: bool = True,
+    doc_path: str = DEFAULT_DOC_PATH,
 ):
+    if check_updates:
+        ensure_index_current(doc_path)
     chunks = retrieve_chunks(query, top_k=top_k)
     context = build_context(chunks)
     prompt = build_prompt(query, context)
