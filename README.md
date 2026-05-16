@@ -1,11 +1,6 @@
 # 1337-RAG
 
-Interactive CLI for chatting with your indexed notes using Ollama + Pinecone.
-
-The default mode is now a clickable terminal UI:
-- click the retrieved chunks table rows to inspect full chunk content
-- type your question in the input bar and press Enter
-- change `model` and `top_k` live from the right panel, then click `Apply`
+A RAG system answering the 1337 school about questions, with both an interactive CLI and also a TUI for easier use.
 
 ## Run
 
@@ -13,12 +8,23 @@ The default mode is now a clickable terminal UI:
 python main.py
 ```
 
-Ask a one-off question:
+Ask your 1337 related question:
 
-```bash
-python main.py "What is retrieval augmented generation?"
+```text
+"What is 1337 school?"
+```
+```text
+"How does the 1337 school work?"
+```
+```text
+"Tell me more about the 1337 school campuses?"
 ```
 
+To use the CLI mode if you want:
+
+```bash
+python main.py --classic
+```
 Useful commands inside the chat:
 
 - /help
@@ -28,9 +34,3 @@ Useful commands inside the chat:
 - /ingest
 - /reset
 - /exit
-
-Use old CLI mode if needed:
-
-```bash
-python main.py --classic
-```
