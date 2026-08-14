@@ -1,2 +1,5 @@
+ollama>=0.1.0
+pinecone-client>=2.2.0
+python-dotenv>=1.0.0
 rich>=13.7.0
 textual>=0.75.0
